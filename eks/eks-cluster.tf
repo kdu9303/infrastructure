@@ -85,7 +85,7 @@ module "eks" {
 
     iam_role_additional_policies = {
       additional = aws_iam_policy.additional.arn
-    }
+    } 
 
     ebs_optimized = true
     block_device_mappings = {
