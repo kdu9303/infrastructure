@@ -5,6 +5,15 @@ provider "aws" {
   profile = "dataengineer"
 }
 
+# S3 bucket for backend
+resource "aws_s3_bucket_versioning" "tfstate" {
+  bucket = "terraform-backend-tfstate"
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -54,7 +63,7 @@ resource "aws_iam_policy" "additional" {
 
 module "kms" {
   source  = "terraform-aws-modules/kms/aws"
-  version = "1.1.0"
+  version = "~> 1.5.0"
 
   aliases               = ["eks/${local.name}"]
   description           = "${local.name} cluster encryption key"
