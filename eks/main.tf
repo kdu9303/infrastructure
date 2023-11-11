@@ -5,15 +5,6 @@ provider "aws" {
   profile = "dataengineer"
 }
 
-# S3 bucket for backend
-resource "aws_s3_bucket_versioning" "tfstate" {
-  bucket = "terraform-backend-tfstate"
-
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
@@ -39,8 +30,10 @@ locals {
   azs = ["ap-northeast-2a", "ap-northeast-2b"]
 
   tags = {
-    env  = "prod"
-    user = "dataengineer"
+    environment  = "prod"
+    created_user = "dataengineer"
+    create_date  = "2023-11-13"
+    update_date  = "2023-11-13"
   }
 }
 
@@ -53,10 +46,24 @@ resource "aws_iam_policy" "additional" {
       {
         Action = [
           "ec2:Describe*",
+          "cloudwatch:PutMetricData",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams",
+          "logs:DescribeLogGroups",
+          "logs:CreateLogStream",
+          "logs:CreateLogGroup"
         ]
         Effect   = "Allow"
         Resource = "*"
       },
+      {
+        Action = [
+          "ssm:GetParameter",
+          "ssm:PutParameter"
+        ]
+        Effect   = "Allow"
+        Resource = "arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*"
+      }
     ]
   })
 }

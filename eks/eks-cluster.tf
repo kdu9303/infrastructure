@@ -11,11 +11,13 @@ module "eks" {
   cluster_version = local.cluster_version
   # endpoint 외부 엑세스 
   cluster_endpoint_public_access = true
+  cluster_enabled_log_types      = ["audit", "api", "authenticator", "controllerManager", "scheduler"]
 
   cluster_addons = {
     coredns = {
-      preserve    = true
+      # preserve    = true
       most_recent = true
+      # resolve_conflicts_on_update = "OVERWRITE"
 
       timeouts = {
         create = "30m"
@@ -27,6 +29,7 @@ module "eks" {
     }
     vpc-cni = {
       most_recent = true
+      # resolve_conflicts_on_update = "OVERWRITE"
     }
   }
 
@@ -49,8 +52,11 @@ module "eks" {
     },
   ]
   iam_role_additional_policies = {
-    additional = aws_iam_policy.additional.arn
+    additional  = aws_iam_policy.additional.arn
   }
+  
+  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy"]
+  
 
   vpc_id                   = module.vpc.vpc_id
   subnet_ids               = module.vpc.private_subnets
@@ -66,6 +72,15 @@ module "eks" {
       type                       = "ingress"
       source_node_security_group = true
     }
+    egress_all = {
+      description      = "Node all egress"
+      protocol         = "-1"
+      from_port        = 0
+      to_port          = 0
+      type             = "egress"
+      cidr_blocks      = ["0.0.0.0/0"]
+      ipv6_cidr_blocks = ["::/0"]
+    }
   }
 
   # Extend node-to-node security group rules
@@ -80,12 +95,13 @@ module "eks" {
     }
   }
 
+
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
 
     iam_role_additional_policies = {
       additional = aws_iam_policy.additional.arn
-    } 
+    }
 
     ebs_optimized = true
     block_device_mappings = {
@@ -104,18 +120,18 @@ module "eks" {
     }
     tags = local.tags
   }
-
+  eks
   # auto scaler
   eks_managed_node_groups = {
     base = {
-      name            = "karpenter"
+      name            = "karpenter-eks-cluster"
       use_name_prefix = false
 
-      instance_types = ["t3.small"]
+      instance_types = ["t3.small","t3.medium"]
       capacity_type  = "SPOT"
 
       min_size     = 1
-      max_size     = 2
+      max_size     = 3
       desired_size = 2
 
       subnet_ids = module.vpc.private_subnets
