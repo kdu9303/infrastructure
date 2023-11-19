@@ -49,12 +49,12 @@ dagsterWebserver:
 
   service:
     # type: ClusterIP, NodePort, LoadBalancer
-    type: NodePort
+    type: LoadBalancer
     # Defines the port where the webserver will serve requests; if changed, don't forget to update the
     # livenessProbe and startupProbe entries below as well.
     port: 3300
-    
-    annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb"}
+    annotations: {}
+    # annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb", "alb.ingress.kubernetes.io/healthcheck-path": "/healthy"}
   # Defines a workspace for the webserver. This should only be set if user deployments are enabled, but
   # the subchart is disabled to manage user deployments in a separate Helm release.
   # In this case, the webserver will need the addresses of the code servers in order to load the user code,
