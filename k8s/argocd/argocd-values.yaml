@@ -1823,12 +1823,13 @@ server:
   ## Server service configuration
   service:
     # -- Server service annotations
-    annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb"}
+    annotations: {}
+    # annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb", "alb.ingress.kubernetes.io/healthcheck-path": "/healthy"}
     # -- Server service labels
     labels: {}
     # -- Server service type
     # type: ClusterIP, NodePort, LoadBalancer
-    type: NodePort
+    type: LoadBalancer
     # -- Server service http port for NodePort service type (only if `server.service.type` is set to "NodePort")
     nodePortHttp: 30080
     # -- Server service https port for NodePort service type (only if `server.service.type` is set to "NodePort")
