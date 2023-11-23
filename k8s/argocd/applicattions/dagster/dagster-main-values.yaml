@@ -48,13 +48,12 @@ dagsterWebserver:
   pathPrefix: ~
 
   service:
-    # type: ClusterIP, NodePort, LoadBalancer
     type: LoadBalancer
     # Defines the port where the webserver will serve requests; if changed, don't forget to update the
     # livenessProbe and startupProbe entries below as well.
     port: 3300
     annotations: {}
-    # annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb", "alb.ingress.kubernetes.io/healthcheck-path": "/healthy"}
+  # annotations: {"alb.ingress.kubernetes.io/group.name": "greta-alb", "alb.ingress.kubernetes.io/healthcheck-path": "/healthy"}
   # Defines a workspace for the webserver. This should only be set if user deployments are enabled, but
   # the subchart is disabled to manage user deployments in a separate Helm release.
   # In this case, the webserver will need the addresses of the code servers in order to load the user code,
@@ -64,7 +63,7 @@ dagsterWebserver:
 
     # List of servers to include in the workflow file. When set,
     # `externalConfigmap` must be empty.
-    servers: 
+    servers:
       - host: "dagster-code-container"
         port: 34000
         name: "data_pipeline"
@@ -291,12 +290,11 @@ dagster-user-deployments:
 
   # List of unique deployments
   deployments:
-    - name: "dagster-code-container"
+    - name: "k8s-example-user-code-1"
       image:
         # When a tag is not supplied, it will default as the Helm chart version.
-        # repository: "docker.io/dagster/user-code-example"
-        repository: "docker.io/kdu9303/dagster-code-container"
-        tag: latest
+        repository: "docker.io/dagster/user-code-example"
+        tag: ~
 
         # Change with caution! If you're using a fixed tag for pipeline run images, changing the
         # image pull policy to anything other than "Always" will use a cached/stale image, which is
@@ -359,8 +357,7 @@ dagster-user-deployments:
       #
       # envSecrets:
       #   - name: secret
-      envSecrets:
-        - name: dagster-secret
+      envSecrets: dagster-secret
 
       # Additional labels that should be included. See:
       # https://kubernetes.io/docs/concepts/overview/working-with-objects/labels
@@ -413,7 +410,8 @@ dagster-user-deployments:
         periodSeconds: 20
         timeoutSeconds: 10
         successThreshold: 1
-        failureThreshold: 15  # Allow roughly 300 seconds to start up by default
+        # Allow roughly 300 seconds to start up by default
+        failureThreshold: 1
 
       # As of 0.14.0, liveness probes are disabled by default. If you want to enable them, it's recommended to also
       # enable startup probes.
@@ -423,33 +421,6 @@ dagster-user-deployments:
 
       service:
         annotations: {}
-
-####################################################################################################
-# Pipeline Run: Configuration for user code containers.
-#
-# `DAGSTER_K8S_PIPELINE_RUN_IMAGE` environment variable will point to the image specified below.
-# The run config for the celery executor can set `job_image` to fetch from environment variable
-# `DAGSTER_K8S_PIPELINE_RUN_IMAGE`, so that celery workers will launch k8s jobs with said image.
-#
-####################################################################################################
-pipelineRun:
-  image:
-    # When a tag is not supplied for a Dagster provided image,
-    # it will default as the Helm chart version.
-    repository: "docker.io/kdu9303/dagster-code-container"
-    tag: latest
-    pullPolicy: Always
-
-  # Additional environment variables to set.
-  # A Kubernetes ConfigMap will be created with these environment variables. See:
-  # https://kubernetes.io/docs/concepts/configuration/configmap/
-  #
-  # Example:
-  #
-  # env:
-  #   ENV_ONE: one
-  #   ENV_TWO: two
-  env: {}
 
 ####################################################################################################
 # Scheduler: Configuration for the scheduler
@@ -520,7 +491,6 @@ runLauncher:
       #   - name: secret
       envSecrets:
         - name: dagster-secret
-
       # Additional variables from the existing environment can be passed into the Job.
       #
       # Example:
@@ -782,7 +752,6 @@ postgresql:
 
   # set this PostgreSQL hostname when using an external PostgreSQL database
   postgresqlHost: "greta-db.cnavqkcdpcwj.ap-northeast-2.rds.amazonaws.com"
-  # postgresqlHost: ""
 
   postgresqlUsername: dagster
 
@@ -944,15 +913,14 @@ ingress:
     "alb.ingress.kubernetes.io/group.name": "greta-alb",
     "alb.ingress.kubernetes.io/target-type": "ip",
     "alb.ingress.kubernetes.io/scheme": "internet-facing"
-  }
+    }
   labels: {}
 
   # Specify the IngressClass used to implement this ingress.
   #
   # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
-  # ingressClassName: ~
   ingressClassName: alb
-  
+
   dagsterWebserver:
     # Ingress hostname for the webserver e.g. dagster.mycompany.com
     # This variable allows customizing the route pattern in the ingress. Some
@@ -1073,12 +1041,11 @@ dagsterDaemon:
   image:
     # When a tag is not supplied for a Dagster provided image,
     # it will default as the Helm chart version.
-    # repository: "docker.io/dagster/dagster-celery-k8s"
     repository: "docker.io/kdu9303/dagster-main"
     tag: *global_version
     pullPolicy: Always
 
-  heartbeatTolerance: 300
+  heartbeatTolerance: 1800
 
   runCoordinator:
     # Whether or not to enable the run queue (or some other custom run coordinator). See
@@ -1121,24 +1088,24 @@ dagsterDaemon:
   # will either fail the run or attempt to resume the run with a new run worker.
   runMonitoring:
     enabled: true
-    # Timeout for runs to start (avoids runs hanging in STARTED)
-    startTimeoutSeconds: 300
+    # Timeout for runs to start (avoids runs hanging in STARTING)
+    startTimeoutSeconds: 500
     # Timeout for runs to cancel (avoids runs hanging in CANCELING)
-    # cancelTimeoutSeconds: 300
+    cancelTimeoutSeconds: 500
     # How often to check on in progress runs
     pollIntervalSeconds: 120
     # [Experimental] Max number of times to attempt to resume a run with a new run worker instead
     # of failing the run if the run worker has crashed. Only works for runs using the
     # `k8s_job_executor` to run each op in its own Kubernetes job. To enable, set this value
     # to a value greater than 0.
-    maxResumeRunAttempts: 0
+    maxResumeRunAttempts: 3
     # [Experimental] Number of seconds to wait after a run has ended with a success/failed/canceled
     # status before freeing any concurrency slots that may have been retained.
     freeSlotsAfterRunEndSeconds: 0
 
   runRetries:
     enabled: true
-    maxRetries: 0
+    maxRetries: 3
 
   sensors:
     # Whether to evaluate sensors using an asynchronous thread pool, allowing sensprs
@@ -1334,12 +1301,21 @@ retention:
   schedule:
     # For schedule ticks, specifies after how many days ticks can be removed.  This field can either
     # be a dict of tick types to integers, or an integer (applies to all tick types).  A value of -1
-    # indicates that ticks should be retained indefinitely
+    # indicates that ticks should be retained indefinitely.
     purgeAfterDays: -1
   sensor:
     # For sensor ticks, specifies after how many days ticks can be removed.  This field can either
     # be a dict of tick types to integers, or an integer (applies to all tick types).  A value of -1
-    # indicates that ticks should be retained indefinitely
+    # indicates that ticks should be retained indefinitely.
+    purgeAfterDays:
+      failure: -1
+      skipped: 7
+      started: -1
+      success: -1
+  autoMaterialize:
+    # For auto-materialization ticks, specifies after how many days ticks can be removed.  This
+    # field can either be a dict of tick types to integers, or an integer (applies to all tick
+    # types).  A value of -1 indicates that ticks should be retained indefinitely.
     purgeAfterDays:
       failure: -1
       skipped: 7
@@ -1356,4 +1332,28 @@ retention:
 #     run_tags:
 #       key: value
 additionalInstanceConfig: {}
+
+####################################################################################################
+# [DEPRECATED] Pipeline Run
+#
+# This config can now be set with dagster-user-deployments.
+####################################################################################################
+pipelineRun:
+  image:
+    # When a tag is not supplied for a Dagster provided image,
+    # it will default as the Helm chart version.
+    repository: "docker.io/dagster/user-code-example"
+    tag: ~
+    pullPolicy: Always
+
+  # Additional environment variables to set.
+  # A Kubernetes ConfigMap will be created with these environment variables. See:
+  # https://kubernetes.io/docs/concepts/configuration/configmap/
+  #
+  # Example:
+  #
+  # env:
+  #   ENV_ONE: one
+  #   ENV_TWO: two
+  env: {}
 
