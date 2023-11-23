@@ -1,3 +1,4 @@
+# Load balancer config
 module "load_balancer_controller_irsa_role" {
   source = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
 
@@ -13,6 +14,7 @@ module "load_balancer_controller_irsa_role" {
 
   tags = local.tags
 }
+
 
 variable "hosted_zone_id" {
   type    = string

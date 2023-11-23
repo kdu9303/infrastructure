@@ -1,8 +1,3 @@
-variable "existing_security_group_id" {
-  type    = string
-  default = "sg-06699e742e43e9ec8"
-}
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "~> 19.17.0"
@@ -12,7 +7,7 @@ module "eks" {
   # endpoint 외부 엑세스 
   cluster_endpoint_public_access = true
   cluster_enabled_log_types      = ["audit", "api", "authenticator", "controllerManager", "scheduler"]
-
+  
   cluster_addons = {
     coredns = {
       # preserve    = true
@@ -50,17 +45,28 @@ module "eks" {
         "system:nodes",
       ]
     },
+    # AWS 관리자 계정 추가
+    {
+      rolearn  = "arn:aws:iam::633647824487:user/root"
+      username = "greta"
+      groups = [
+        "system:masters",
+      ]
+    },
   ]
   iam_role_additional_policies = {
-    additional  = aws_iam_policy.additional.arn
+    additional = aws_iam_policy.additional.arn
   }
-  
-  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy"]
-  
 
-  vpc_id                   = module.vpc.vpc_id
-  subnet_ids               = module.vpc.private_subnets
+  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy"]
+
+
+  vpc_id = module.vpc.vpc_id
+  # EKS 파드가 할당되는 Subnet 대역
+  subnet_ids = module.vpc.private_subnets
+  #Control Plane의 파드가 할당되는 subnet 대역
   control_plane_subnet_ids = module.vpc.intra_subnets
+
 
   # Extend cluster security group rules
   cluster_security_group_additional_rules = {
@@ -97,6 +103,7 @@ module "eks" {
 
 
   eks_managed_node_group_defaults = {
+
     ami_type = "AL2_x86_64"
 
     iam_role_additional_policies = {
@@ -118,16 +125,18 @@ module "eks" {
         }
       }
     }
+
+    pre_userdata = local.ssm_userdata
+
     tags = local.tags
   }
-  eks
   # auto scaler
   eks_managed_node_groups = {
     base = {
       name            = "karpenter-eks-cluster"
       use_name_prefix = false
 
-      instance_types = ["t3.small","t3.medium"]
+      instance_types = ["t3.medium", "t3.large"]
       capacity_type  = "SPOT"
 
       min_size     = 1
@@ -135,6 +144,8 @@ module "eks" {
       desired_size = 2
 
       subnet_ids = module.vpc.private_subnets
+
+      user_data_base64 = base64encode(local.ssm_userdata)
     }
   }
 
