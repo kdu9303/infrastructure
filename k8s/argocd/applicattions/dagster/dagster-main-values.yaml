@@ -574,7 +574,10 @@ runLauncher:
       #   jobMetadata: # raw config for the kubernetes job's metadata
       #     annotations:
       #       mykey: myvalue
-      runK8sConfig: {}
+      runK8sConfig:
+        jobSpecConfig:
+          ttlSecondsAfterFinished: 7200
+
 
     # This configuration will only be used if the CeleryK8sRunLauncher is selected
     celeryK8sRunLauncher:
@@ -1061,7 +1064,7 @@ dagsterDaemon:
     config:
       queuedRunCoordinator:
         # The maximum number of runs to allow to be running at once. Defaults to no limit.
-        maxConcurrentRuns: ~
+        maxConcurrentRuns: 4
         # Tag based concurrency limits. See https://docs.dagster.io/deployment/run-coordinator#usage
         # for examples.
         tagConcurrencyLimits: []
@@ -1090,23 +1093,23 @@ dagsterDaemon:
   runMonitoring:
     enabled: true
     # Timeout for runs to start (avoids runs hanging in STARTING)
-    startTimeoutSeconds: 500
+    startTimeoutSeconds: 300
     # Timeout for runs to cancel (avoids runs hanging in CANCELING)
-    cancelTimeoutSeconds: 500
+    cancelTimeoutSeconds: 300
     # How often to check on in progress runs
     pollIntervalSeconds: 120
     # [Experimental] Max number of times to attempt to resume a run with a new run worker instead
     # of failing the run if the run worker has crashed. Only works for runs using the
     # `k8s_job_executor` to run each op in its own Kubernetes job. To enable, set this value
     # to a value greater than 0.
-    maxResumeRunAttempts: 3
+    maxResumeRunAttempts: 0
     # [Experimental] Number of seconds to wait after a run has ended with a success/failed/canceled
     # status before freeing any concurrency slots that may have been retained.
     freeSlotsAfterRunEndSeconds: 0
 
   runRetries:
-    enabled: true
-    maxRetries: 3
+    enabled: false
+    maxRetries: 0
 
   sensors:
     # Whether to evaluate sensors using an asynchronous thread pool, allowing sensprs
