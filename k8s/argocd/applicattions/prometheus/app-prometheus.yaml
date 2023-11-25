@@ -2,7 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: prometheus-stack
-  namespace: prometheus
+  namespace: argocd
 spec:
   project: default
   destination:
@@ -12,7 +12,7 @@ spec:
     # Chart from Chart Repo
     - chart: kube-prometheus-stack
       repoURL: https://prometheus-community.github.io/helm-charts
-      # targetRevision: 1.5.9
+      targetRevision: 54.2.2
       helm:
         # https://argo-cd.readthedocs.io/en/stable/user-guide/multiple_sources/#helm-value-files-from-external-git-repository
         valueFiles:
