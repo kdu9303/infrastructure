@@ -59,7 +59,7 @@ module "eks" {
   }
 
   # iam_role_additional_policies = ["arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy"]
-
+  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
 
   vpc_id = module.vpc.vpc_id
   # EKS 파드가 할당되는 Subnet 대역
@@ -106,8 +106,13 @@ module "eks" {
 
     ami_type = "AL2_x86_64"
 
+    # iam_role_additional_policies = {
+    #   additional = aws_iam_policy.additional.arn
+    # }
+
     iam_role_additional_policies = {
-      additional = aws_iam_policy.additional.arn
+      additional = aws_iam_policy.additional.arn,
+      AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
 
     ebs_optimized = true
