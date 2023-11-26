@@ -503,8 +503,8 @@ alertmanager:
     sessionAffinity: ""
 
     ## Service type
-    ## ClusterIP
-    type: LoadBalancer
+    ##
+    type: ClusterIP
 
   ## Configuration for creating a separate Service for each statefulset Alertmanager replica
   ##
@@ -2656,9 +2656,9 @@ prometheus:
     ##
     externalTrafficPolicy: Cluster
 
-    ## Prometheus Service type
-    ## ClusterIP
-    type: LoadBalancer
+    ## Service type
+    ##
+    type: ClusterIP
 
     ## Additional ports to open for Prometheus service
     ##
@@ -3195,7 +3195,7 @@ prometheus:
 
     ## How long to retain metrics
     ##
-    retention: 3d
+    retention: 5d
 
     ## Maximum size of metrics
     ##
