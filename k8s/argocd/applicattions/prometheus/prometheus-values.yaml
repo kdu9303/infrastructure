@@ -289,18 +289,26 @@ alertmanager:
   config:
     global:
       resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/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'
     inhibit_rules:
+      # - source_matchers:
+      #     - 'severity = critical'
+      #   target_matchers:
+      #     - 'severity =~ warning|info'
+      #   equal:
+      #     - 'namespace'
+      #     - 'alertname'
+      # - source_matchers:
+      #     - 'severity = warning'
+      #   target_matchers:
+      #     - 'severity = info'
+      #   equal:
+      #     - 'namespace'
+      #     - 'alertname'
       - source_matchers:
-          - 'severity = critical'
+          - 'alertname = Info'
         target_matchers:
-          - 'severity =~ warning|info'
-        equal:
-          - 'namespace'
-          - 'alertname'
-      - source_matchers:
-          - 'severity = warning'
-        target_matchers:
-          - 'severity = info'
+          - 'severity = none'
         equal:
           - 'namespace'
           - 'alertname'
@@ -310,18 +318,32 @@ alertmanager:
           - 'severity = info'
         equal:
           - 'namespace'
+          - 'alertname'
     route:
-      group_by: ['namespace']
+      group_by: ['job']  # 'job','namespace', 'node', 'pod-name'
       group_wait: 30s
       group_interval: 5m
       repeat_interval: 12h
-      receiver: 'null'
+      receiver: 'slack-notifications'
       routes:
-      - receiver: 'null'
+      - receiver: 'slack-notifications'
         matchers:
           - alertname =~ "InfoInhibitor|Watchdog"
     receivers:
-    - name: 'null'
+    - name: 'slack-notifications'
+      slack_configs:
+        - channel: '#k8s-alert'
+          send_resolved: true
+          title: '[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] Monitoring Event Notification'
+          text: >-
+            {{ range .Alerts }}
+              *Alert:* {{ .Annotations.summary }} - `{{ .Labels.severity }}`
+              *Description:* {{ .Annotations.description }}
+              *Graph:* <{{ .GeneratorURL }}|:chart_with_upwards_trend:> *Runbook:* <{{ .Annotations.runbook_url }}|:spiral_note_pad:>
+              *Details:*
+              {{ range .Labels.SortedPairs }} • *{{ .Name }}:* `{{ .Value }}`
+              {{ end }}
+            {{ end }}
     templates:
     - '/etc/alertmanager/config/*.tmpl'
 
@@ -2627,7 +2649,11 @@ prometheus:
   ##
   service:
     annotations: {}
-    labels: {}
+    labels: {
+      # Labels used for k8s lens
+      "operated-prometheus": "true",
+      "self-monitor": "true"
+    }
     clusterIP: ""
 
     ## Port for Prometheus Service to listen on
