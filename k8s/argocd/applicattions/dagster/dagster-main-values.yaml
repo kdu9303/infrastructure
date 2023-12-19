@@ -5,7 +5,7 @@
 # - We recommend using unique tags for user code images, as this will guarantee that the docker
 #   image will be consistent for the pipeline's entire execution.
 ---
-define: &global_version '23.12.5.2'
+define: &global_version '23.12.19.1'
 
 
 global:
