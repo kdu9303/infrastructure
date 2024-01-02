@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mvc-backend
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mvc
+  source:
+    repoURL: 'git@github.com:greta-inc/mvc-app.git'
+    targetRevision: develop
+    path: "backend/"
+    directory:
+      include: 'mvc-backend.yaml'
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

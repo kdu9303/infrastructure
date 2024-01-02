@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mvc-backend-deployment
+  namespace: mvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mvc-backend
+  strategy:
+    type: RollingUpdate      
+  template:
+    metadata:
+      labels:
+        app: mvc-backend
+    spec:
+      containers:
+      - name: mvc-backend
+        image: kdu9303/mvc-backend:0.0.5
+        imagePullPolicy: Always
+        # envFrom:
+        #   - secretRef:
+        #     name: mvc-secret
+        resources:
+          requests:
+            memory: 500Mi
+          limits:
+            memory: 500Mi
+        ports:
+        - containerPort: 8000
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mvc-backend-service
+  namespace: mvc
+spec:
+  selector:
+    app: mvc-backend
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP

@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mvc-frontend
+  namespace: argocd
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mvc
+  source:
+    repoURL: 'git@github.com:greta-inc/mvc-app.git'
+    targetRevision: develop
+    path: "frontend/"
+    directory:
+      include: 'mvc-frontend.yml'
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mvc-full-deployment
+  namespace: mvc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mvc-full
+  strategy:
+    type: RollingUpdate      
+  template:
+    metadata:
+      labels:
+        app: mvc-full
+    spec:
+      containers:
+      - name: mvc-backend
+        image: kdu9303/mvc-backend:0.0.2
+        # envFrom:
+        #   - secretRef:
+        #     name: mysql-secret
+        resources:
+          limits:
+            memory: 1.5Gi
+        ports:
+        - containerPort: 8000
+          name: mvc-backend
+      - name: mvc-frontend
+        image: kdu9303/mvc-frontend:0.0.6
+        # command: ["/bin/sh", "-c"]
+        # args: ["npm run start"]
+        imagePullPolicy: Always
+        env:
+        - name: NEXT_PUBLIC_BASE_API
+          value: "http://mvc-full-service.mvc.svc.cluster.local:8000"
+        # envFrom:
+        #   - secretRef:
+        #     name: mysql-secret        
+        # resources:
+        #   limits:
+        #     memory: 2Gi
+        ports:
+        - containerPort: 3000
+          name: mvc-frontend    
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mvc-full-service
+  namespace: mvc
+spec:
+  selector:
+    app: mvc-full
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: mvc-backend-port
+  - port: 3000
+    targetPort: 3000
+    name: mvc-frontend-port
+  type: LoadBalancer
