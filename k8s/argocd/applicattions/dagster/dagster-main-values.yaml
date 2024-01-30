@@ -1215,8 +1215,13 @@ dagsterDaemon:
   tolerations: []
   podSecurityContext: {}
   securityContext: {}
-  resources: {}
-
+  resources: 
+      requests:
+        cpu: "100m"
+        memory: "700Mi"
+      limits:
+        cpu: "300m"
+        memory: "1Gi"
   # Override the default K8s scheduler
   # schedulerName: ~
 
