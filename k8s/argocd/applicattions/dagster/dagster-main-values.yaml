@@ -5,7 +5,7 @@
 # - We recommend using unique tags for user code images, as this will guarantee that the docker
 #   image will be consistent for the pipeline's entire execution.
 ---
-define: &global_version '23.12.19.1'
+define: &global_version '24.1.30.1'
 
 
 global:
@@ -165,8 +165,14 @@ dagsterWebserver:
   tolerations: []
   podSecurityContext: {}
   securityContext: {}
-  resources: {}
-
+  # resources: {}
+  resources: 
+    requests:
+      cpu: "150m"
+      memory: "350Mi"
+    # limits:
+      # cpu: "300m"
+      # memory: "1.5Gi"
   # Override the default K8s scheduler
   # schedulerName: ~
 
