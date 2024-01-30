@@ -24,7 +24,7 @@ spec:
         #     name: mvc-secret
         resources:
           requests:
-            memory: 500Mi
+            memory: 200Mi
           limits:
             memory: 500Mi
         ports:

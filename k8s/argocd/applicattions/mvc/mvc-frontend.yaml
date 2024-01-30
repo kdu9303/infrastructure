@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mvc-frontend
-        image: kdu9303/mvc-frontend:0.0.9
+        image: kdu9303/mvc-frontend:0.1.0
         imagePullPolicy: Always
         env:
         - name: NEXT_PUBLIC_BASE_API
@@ -27,7 +27,7 @@ spec:
         #     name: mysql-secret        
         resources:
           requests:
-            memory: 1Gi
+            memory: 300Mi
           limits:
             memory: 1Gi
         ports:
