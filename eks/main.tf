@@ -47,7 +47,7 @@ locals {
     environment  = "prod"
     created_user = "dataengineer"
     create_date  = "2023-11-16"
-    update_date  = "2023-11-26"
+    update_date  = "2024-1-31"
   }
 }
 
