@@ -4,10 +4,10 @@ resource "aws_db_instance" "postgres-db" {
   monitoring_interval   = 60
   publicly_accessible   = true
   skip_final_snapshot   = true
-  allocated_storage     = 20
+  allocated_storage     = 38
   max_allocated_storage = 1000
   engine                = "postgres"
-  engine_version        = "15.3"
+  engine_version        = "15.5"
   instance_class        = "db.t3.micro"
   #   db_name              = local.name
   #   username             = "greta"
