@@ -7,7 +7,7 @@ spec:
   project: default
   destination:
     server: https://kubernetes.default.svc
-    namespace: mvc
+    namespace: dagster
   sources:
     # Chart from Chart Repo
     - chart: dagster
