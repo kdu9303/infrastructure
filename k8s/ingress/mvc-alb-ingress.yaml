@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: mvc
+  name: mvc-alb-ingress
+  labels:
+    app.kubernetes.io/name: mvc-alb-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/load-balancer-name: mvc-alb
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/security-groups: sg-05b1c1bbf98a53a6f, sg-01235c014f5e284ab
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:xxxxx:certificate/xxxxxxx
+    # alb.ingress.kubernetes.io/group.name: greta-alb
+    # alb.ingress.kubernetes.io/group.order: '1'
+    # alb.ingress.kubernetes.io/backend-protocol: TCP
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}, {"HTTPS": 80}]'
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /mvc-llm
+            pathType: Prefix
+            backend:
+              service:
+                name: mvc-llm-service
+                port: 
+                  number: 8501
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mvc-frontend-service
+                port: 
+                  number: 3000
+    # - http:
+    #     paths:
+    #     - path: /test
+    #       pathType: Prefix
+    #       backend:
+    #         service:
+    #           name: test-service
+    #           port:
+    #             number: 80
+# - host: alb-1613213823.ap-northeast-2.elb.amazonaws.com

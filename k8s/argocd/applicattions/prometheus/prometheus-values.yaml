@@ -52,7 +52,7 @@ defaultRules:
     kubeApiserverBurnrate: true
     kubeApiserverHistogram: true
     kubeApiserverSlos: true
-    kubeControllerManager: true
+    kubeControllerManager: false
     kubelet: true
     kubeProxy: true
     kubePrometheusGeneral: true
@@ -61,7 +61,7 @@ defaultRules:
     kubernetesResources: true
     kubernetesStorage: true
     kubernetesSystem: true
-    kubeSchedulerAlerting: true
+    kubeSchedulerAlerting: false
     kubeSchedulerRecording: true
     kubeStateMetrics: true
     network: true
@@ -326,10 +326,15 @@ alertmanager:
       repeat_interval: 12h
       receiver: 'slack-notifications'
       routes:
+      - receiver: 'null-receiver'
+        match:
+          alertname: 'Watchdog'
       - receiver: 'slack-notifications'
         matchers:
-          - alertname =~ "InfoInhibitor|Watchdog"
+          - alertname = "InfoInhibitor"
+          # - alertname =~ "InfoInhibitor|Watchdog"
     receivers:
+    - name: 'null-receiver'
     - name: 'slack-notifications'
       slack_configs:
         - channel: '#k8s-alert'
