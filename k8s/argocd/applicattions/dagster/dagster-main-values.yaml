@@ -1052,7 +1052,7 @@ dagsterDaemon:
   image:
     # When a tag is not supplied for a Dagster provided image,
     # it will default as the Helm chart version.
-    repository: "docker.io/kdu9303/dagster-main"
+    repository: "633647824487.dkr.ecr.ap-northeast-2.amazonaws.com/dagster-main"
     tag: *global_version
     pullPolicy: Always
 
