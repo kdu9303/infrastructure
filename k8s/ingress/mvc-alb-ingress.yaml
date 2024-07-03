@@ -9,24 +9,28 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/load-balancer-name: mvc-alb
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/security-groups: sg-05b1c1bbf98a53a6f, sg-01235c014f5e284ab
-    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-west-2:xxxxx:certificate/xxxxxxx
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-northeast-2:633647824487:certificate/aa0d6d16-f38c-4df5-95c4-5b783fa17890
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}, {"HTTPS": 80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # alb.ingress.kubernetes.io/actions.ssl-redirect: '{"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+    # alb.ingress.kubernetes.io/backend-protocol: HTTPS
+    # alb.ingress.kubernetes.io/healthcheck-protocol: HTTPS
+    # alb.ingress.kubernetes.io/security-groups: sg-09c0e9b60ed112393, sg-05b1c1bbf98a53a6f, sg-04dfdb279c54e3e07, sg-02a3187938b1744f7
     # alb.ingress.kubernetes.io/group.name: greta-alb
     # alb.ingress.kubernetes.io/group.order: '1'
     # alb.ingress.kubernetes.io/backend-protocol: TCP
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}, {"HTTPS": 80}]'
 spec:
   ingressClassName: alb
   rules:
     - http:
         paths:
-          - path: /mvc-llm
+          - path: /backend
             pathType: Prefix
             backend:
               service:
-                name: mvc-llm-service
+                name: mvc-backend-service
                 port: 
-                  number: 8501
+                  number: 8000
     - http:
         paths:
           - path: /
@@ -36,13 +40,6 @@ spec:
                 name: mvc-frontend-service
                 port: 
                   number: 3000
-    # - http:
-    #     paths:
-    #     - path: /test
-    #       pathType: Prefix
-    #       backend:
-    #         service:
-    #           name: test-service
-    #           port:
-    #             number: 80
+
+
 # - host: alb-1613213823.ap-northeast-2.elb.amazonaws.com
