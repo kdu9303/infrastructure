@@ -1,13 +1,13 @@
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.17.0"
+  version = "~> 20.2.0"
 
   cluster_name    = local.name
   cluster_version = local.cluster_version
   # endpoint 외부 엑세스 
   cluster_endpoint_public_access = true
   cluster_enabled_log_types      = ["audit", "api", "authenticator", "controllerManager", "scheduler"]
-  
+
   cluster_addons = {
     coredns = {
       # preserve    = true
@@ -34,32 +34,10 @@ module "eks" {
     provider_key_arn = module.kms.key_arn
   }
 
-  # manage_aws_auth_configmap = true
-  aws_auth_roles = [
-    # We need to add in the Karpenter node IAM role for nodes launched by Karpenter
-    {
-      rolearn  = module.karpenter.role_arn
-      username = "system:node:{{EC2PrivateDNSName}}"
-      groups = [
-        "system:bootstrappers",
-        "system:nodes",
-      ]
-    },
-    # AWS 관리자 계정 추가
-    {
-      rolearn  = "arn:aws:iam::633647824487:user/root"
-      username = "greta"
-      groups = [
-        "system:masters",
-      ]
-    },
-  ]
   iam_role_additional_policies = {
     additional = aws_iam_policy.additional.arn
   }
 
-  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/CloudWatchAgentAdminPolicy"]
-  # iam_role_additional_policies = ["arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"]
 
   vpc_id = module.vpc.vpc_id
   # EKS 파드가 할당되는 Subnet 대역
@@ -111,7 +89,7 @@ module "eks" {
     # }
 
     iam_role_additional_policies = {
-      additional = aws_iam_policy.additional.arn,
+      additional                   = aws_iam_policy.additional.arn,
       AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
     }
 
@@ -137,15 +115,16 @@ module "eks" {
   }
   # auto scaler
   eks_managed_node_groups = {
-    base = {
+    base3 = {
       name            = "karpenter-eks-cluster"
-      use_name_prefix = false
+      use_name_prefix = true
 
-      instance_types = ["t3.medium", "t3.large"]
+      # instance_types = ["t3.medium", "t3.large"]
+      instance_types = ["t3.large"]
       capacity_type  = "SPOT"
 
       min_size     = 2
-      max_size     = 3
+      max_size     = 2
       desired_size = 2
 
       subnet_ids = module.vpc.private_subnets
@@ -160,5 +139,53 @@ module "eks" {
     # (i.e. - at most, only one security group should have this tag in your account)
     "karpenter.sh/discovery" = local.name
   })
+
+}
+
+module "eks-aws-auth" {
+  source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
+  version = "~> 20.2.0"
+
+  manage_aws_auth_configmap = true
+
+
+  aws_auth_roles = [
+    {
+      rolearn  = module.eks.cluster_iam_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
+        "system:bootstrappers",
+        "system:nodes",
+      ]
+    },
+    # AWS 관리자 계정 추가
+    {
+      rolearn  = "arn:aws:iam::633647824487:user/root"
+      username = "greta"
+      groups = [
+        "system:masters",
+      ]
+    },
+    # We need to add in the Karpenter node IAM role for nodes launched by Karpenter
+    {
+      rolearn  = "arn:aws:iam::633647824487:role/KarpenterNodeRole-${local.name}"
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
+        "system:bootstrappers",
+        "system:nodes",
+      ]
+    },
+    {
+      rolearn  = module.karpenter.iam_role_arn
+      username = "system:node:{{EC2PrivateDNSName}}"
+      groups = [
+        "system:bootstrappers",
+        "system:nodes",
+      ]
+    },
+  ]
+  aws_auth_accounts = [
+    "633647824487",
+  ]
 
 }

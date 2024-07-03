@@ -1,17 +1,39 @@
+terraform {
+  required_providers {
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = ">= 1.14.0"
+    }
+  }
+}
+
 provider "aws" {
   region = local.region
   # shared_config_files=["~/.aws/config"] # Or $HOME/.aws/config
   # shared_credentials_files = ["~/.aws/credentials"] # Or $HOME/.aws/credentials
   profile = "dataengineer"
 }
+provider "helm" {
+  # Authentication to get into the cluster
+  kubernetes {
+    host                   = module.eks.cluster_endpoint
+    cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+    token                  = data.aws_eks_cluster_auth.eks.token
+  }
+}
+
+
+data "aws_eks_cluster_auth" "eks" {
+  name = module.eks.cluster_name
+}
 
 provider "kubernetes" {
   host                   = module.eks.cluster_endpoint
   cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  token                  = data.aws_eks_cluster_auth.eks.token
 
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    # api_version = "client.authentication.k8s.io/v1"
     command     = "aws"
     # This requires the awscli to be installed locally where Terraform is executed
     args = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
@@ -20,36 +42,6 @@ provider "kubernetes" {
 
 data "aws_availability_zones" "available" {}
 data "aws_caller_identity" "current" {}
-
-locals {
-  name            = "greta-eks"
-  cluster_version = "1.27"
-  region          = "ap-northeast-2"
-
-  vpc_cidr = "10.1.0.0/16"
-  # azs      = slice(data.aws_availability_zones.available.names, 0, 3)
-  azs = ["ap-northeast-2a", "ap-northeast-2b"]
-
-  ssm_userdata = <<-EOT
-    #!/bin/bash
-
-    set -o errexit
-    set -o pipefail
-    set -o nounset
-
-    sudo yum install -y amazon-ssm-agent
-    sudo systemctl enable amazon-ssm-agent
-    sudo systemctl start amazon-ssm-agent
-    EOT
-
-
-  tags = {
-    environment  = "prod"
-    created_user = "dataengineer"
-    create_date  = "2023-11-16"
-    update_date  = "2024-1-31"
-  }
-}
 
 resource "aws_iam_policy" "additional" {
   name = "${local.name}-additional"
@@ -60,6 +52,7 @@ resource "aws_iam_policy" "additional" {
       {
         Action = [
           "ec2:Describe*",
+          "sts:AssumeRole",
           "cloudwatch:PutMetricData",
           "logs:PutLogEvents",
           "logs:DescribeLogStreams",
@@ -107,13 +100,20 @@ resource "aws_iam_policy" "additional" {
         Effect   = "Allow"
         Resource = "*"
       },
+      {
+        Action = [
+          "ecr:*"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      }
     ]
   })
 }
 
 module "kms" {
   source  = "terraform-aws-modules/kms/aws"
-  version = "~> 1.5.0"
+  version = "~> 2.2.0"
 
   aliases               = ["eks/${local.name}"]
   description           = "${local.name} cluster encryption key"
@@ -121,4 +121,36 @@ module "kms" {
   key_owners            = [data.aws_caller_identity.current.arn]
 
   tags = local.tags
+}
+
+
+
+locals {
+  name            = "greta-eks"
+  cluster_version = "1.28"
+  region          = "ap-northeast-2"
+
+  vpc_cidr = "10.1.0.0/16"
+  # azs      = slice(data.aws_availability_zones.available.names, 0, 3)
+  azs = ["ap-northeast-2a", "ap-northeast-2b"]
+
+  ssm_userdata = <<-EOT
+    #!/bin/bash
+
+    set -o errexit
+    set -o pipefail
+    set -o nounset
+
+    sudo yum install -y amazon-ssm-agent
+    sudo systemctl enable amazon-ssm-agent
+    sudo systemctl start amazon-ssm-agent
+    EOT
+
+
+  tags = {
+    environment  = "prod"
+    created_user = "dataengineer"
+    create_date  = "2023-11-16"
+    update_date  = "2024-5-31"
+  }
 }

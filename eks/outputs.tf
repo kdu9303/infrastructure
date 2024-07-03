@@ -186,10 +186,10 @@ output "self_managed_node_groups_autoscaling_group_names" {
 # Additional
 ################################################################################
 
-output "aws_auth_configmap_yaml" {
-  description = "Formatted yaml output for base aws-auth configmap containing roles used in cluster node groups/fargate profiles"
-  value       = module.eks.aws_auth_configmap_yaml
-}
+# output "aws_auth_configmap_yaml" {
+#   description = "Formatted yaml output for base aws-auth configmap containing roles used in cluster node groups/fargate profiles"
+#   value       = module.eks.aws_auth_configmap_yaml
+# }
 
 ################################################################################
 # IAM Role for Service Account (IRSA)
@@ -197,17 +197,17 @@ output "aws_auth_configmap_yaml" {
 
 output "karpenter_irsa_name" {
   description = "The name of the IAM role for service accounts"
-  value       = module.karpenter.irsa_name
+  value       = module.karpenter.iam_role_name
 }
 
 output "karpenter_irsa_arn" {
   description = "The Amazon Resource Name (ARN) specifying the IAM role for service accounts"
-  value       = module.karpenter.irsa_arn
+  value       = module.karpenter.iam_role_arn
 }
 
 output "karpenter_irsa_unique_id" {
   description = "Stable and unique string identifying the IAM role for service accounts"
-  value       = module.karpenter.irsa_unique_id
+  value       = module.karpenter.iam_role_unique_id
 }
 
 ################################################################################
@@ -244,17 +244,17 @@ output "karpenter_event_rules" {
 
 output "karpenter_role_name" {
   description = "The name of the IAM role"
-  value       = module.karpenter.role_name
+  value       = module.karpenter.iam_role_name
 }
 
 output "karpenter_role_arn" {
   description = "The Amazon Resource Name (ARN) specifying the IAM role"
-  value       = module.karpenter.role_arn
+  value       = module.karpenter.iam_role_arn
 }
 
 output "karpenter_role_unique_id" {
   description = "Stable and unique string identifying the IAM role"
-  value       = module.karpenter.role_unique_id
+  value       = module.karpenter.iam_role_unique_id
 }
 
 ################################################################################
