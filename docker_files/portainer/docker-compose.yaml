@@ -1,0 +1,14 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    ports:
+      - "8000:8000"  # Portainer agent 통신을 위한 포트
+      - "19000:9000"  # Portainer 웹 UI를 위한 포트
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker 소켓을 마운트하여 Docker API에 접근
+      - portainer_data:/data  # Portainer 데이터를 저장할 볼륨
+
+volumes:
+  portainer_data:
