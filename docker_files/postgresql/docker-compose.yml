@@ -1,0 +1,41 @@
+version: "3"
+services: 
+  postgresql:
+    image: postgres:15
+    restart: always
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment: 
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: admin1234
+    volumes:
+      - ./data/postgres/:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    container_name: pgadmin4
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin1234
+    volumes:
+      - ./data/pgadmin/:/var/lib/pgadmin
+
+  mage:
+    image: mageai/mageai:latest
+    container_name: mage
+    restart: always
+    ports:
+      - "6789:6789"    
+    environment:
+      MAGE_DATABASE_CONNECTION_URL: postgresql+psycopg2://mage:mage@postgresql:5432/mage_db
+    volumes:
+      - ./data/mage/:/home/src
+    command:
+      - bash
+      - -c
+      - |
+        /app/run_app.sh mage start demo

@@ -1,0 +1,37 @@
+services:
+  gluetun:
+    image: qmcgaw/gluetun:latest
+    container_name: gluetun
+    # line above must be uncommented to allow external containers to connect.
+    # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/connect-a-container-to-gluetun.md#external-container-to-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8888:8888/tcp # HTTP proxy
+      - 1080:1080
+    volumes:
+      - proxy_data:/gluetun
+    environment:
+      # See https://github.com/qdm12/gluetun-wiki/tree/main/setup#setup
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - VPN_TYPE=openvpn
+      # OpenVPN:
+      - OPENVPN_USER=
+      - OPENVPN_PASSWORD=
+      - OPENVPN_PROTOCOL=tcp
+      - HTTPPROXY=on
+      - HTTPPROXY_LISTENING_ADDRESS=:8888
+      # Wireguard:
+      # - WIREGUARD_PRIVATE_KEY=wOEI9rqqbDwnN8/Bpp22sVz48T71vJ4fYmFWujulwUU=
+      # - WIREGUARD_ADDRESSES=10.64.222.21/32
+      # Timezone for accurate log times
+      - TZ=Asia/Seoul
+      # Server list updater
+      # See https://github.com/qdm12/gluetun-wiki/blob/main/setup/servers.md#update-the-vpn-servers-list
+      - SERVER_COUNTRIES=South Korea
+      - UPDATER_PERIOD=
+volumes:
+  proxy_data:
+    external: true
