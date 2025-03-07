@@ -116,6 +116,7 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 Untitled*.ipynb
+.Trash*
 
 # IPython
 profile_default/
@@ -208,3 +209,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# large files
+*.zip
+*.tar
+*.tgz
+*.gz
+*.whl
+*.whl.part
+*.whl.part.tmp
