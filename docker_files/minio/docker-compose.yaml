@@ -1,10 +1,9 @@
-
 services:
   minio1:
     image: quay.io/minio/minio:latest
     container_name: minio1
-    restart: always
     hostname: minio1
+    restart: unless-stopped
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin1234
@@ -25,7 +24,6 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -38,7 +36,7 @@ services:
   minio2:
     image: quay.io/minio/minio:latest
     container_name: minio2
-    restart: always
+    restart: unless-stopped
     hostname: minio2
     environment:
       MINIO_ROOT_USER: admin
@@ -60,7 +58,6 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -94,7 +91,34 @@ networks:
     name: minio_network
 
 volumes:
+  # 기존 볼륨 설정 (주석 처리)
+  # minio1-data1:
+  # minio1-data2:
+  # minio2-data1:
+  # minio2-data2:
+  
+  # 로컬 경로로 매핑된 볼륨 설정
   minio1-data1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:\docker_volumn\minio1\data1
   minio1-data2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:\docker_volumn\minio1\data2
   minio2-data1:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:\docker_volumn\minio2\data1
   minio2-data2:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:\docker_volumn\minio2\data2
