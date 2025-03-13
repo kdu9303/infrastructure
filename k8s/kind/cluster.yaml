@@ -44,3 +44,6 @@ networking:
   podSubnet: "10.244.0.0/16"
   # 서비스 서브넷 설정
   serviceSubnet: "10.96.0.0/12"
+  # API 서버 주소 설정 (내부 IP 사용)
+  apiServerAddress: "192.168.0.7"  # 여기에 호스트 머신의 내부 IP 주소 입력
+  apiServerPort: 6443

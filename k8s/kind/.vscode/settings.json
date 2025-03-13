@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/dcermak/vscode-rke-cluster-config/main/schemas/cluster.yml.json": "file:///c%3A/Developer/infrastructure/k8s/kind/cluster.yaml"
+    }
+}
