@@ -18,7 +18,7 @@ services:
       - minio1-data1:/data/data1
       - minio1-data2:/data/data2
     networks:
-      - minio_network
+      - kind
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -52,7 +52,7 @@ services:
       - minio2-data1:/data/data1
       - minio2-data2:/data/data2
     networks:
-      - minio_network
+      - kind
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -83,12 +83,16 @@ services:
       exit 0;
       "
     networks:
-      - minio_network
+      - kind
 
 networks:
-  minio_network:
-    driver: bridge
-    name: minio_network
+  # minio_network:
+  #   driver: bridge
+  #   name: minio_network
+  kind:
+    external: true
+
+
 
 volumes:
   # 기존 볼륨 설정 (주석 처리)
