@@ -1,0 +1,47 @@
+services:
+  registry:
+    image: registry:latest
+    container_name: registry
+    restart: always
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+      - ./config.yml:/etc/docker/registry/config.yml
+    environment:
+      # REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin: "['*']"
+      # REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods: '[HEAD,GET,OPTIONS,DELETE]'
+      # REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials: '[true]'
+      # REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers: '[Authorization,Accept,Cache-Control]'
+      # REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '[Docker-Content-Digest]'
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    networks:
+      - kind
+
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    restart: always
+    ports:
+      - "18580:80"
+    environment:
+      - DELETE_IMAGES=true
+      - NGINX_PROXY_PASS_URL=http://registry:5000
+      - REGISTRY_TITLE=로컬 Docker 레지스트리
+      - SINGLE_REGISTRY=true
+    depends_on:
+      - registry
+    networks:
+      - kind
+
+networks:
+  kind:
+    external: true
+
+volumes:
+  registry-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: E:\docker_volumn\registry 
