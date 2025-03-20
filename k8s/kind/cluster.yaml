@@ -3,6 +3,18 @@ apiVersion: kind.x-k8s.io/v1alpha4
 # 클러스터 이름 (선택 사항)
 name: local-k8s
 
+# 로컬 레지스트리 연결을 위한 containerd 설정
+containerdConfigPatches:
+- |-
+  [plugins."io.containerd.grpc.v1.cri".registry]
+    config_path = "/etc/containerd/certs.d"
+
+# kubeadm 설정
+kubeadmConfigPatches:
+- |
+  apiVersion: kubeadm.k8s.io/v1beta4
+  kind: ClusterConfiguration
+
 # 노드 설정
 nodes:
   # 컨트롤 플레인 노드 설정
@@ -44,6 +56,8 @@ networking:
   podSubnet: "10.244.0.0/16"
   # 서비스 서브넷 설정
   serviceSubnet: "10.96.0.0/12"
-  # API 서버 주소 설정 (내부 IP 사용)
-  apiServerAddress: "192.168.0.7"  # 여기에 호스트 머신의 내부 IP 주소 입력
-  apiServerPort: 6443
+  # API 서버 주소 설정 - 외부 IP 대신 로컬호스트 사용
+  apiServerAddress: "192.168.0.7"
+  # apiServerAddress: "127.0.0.1"
+  # 기본 포트 사용
+  apiServerPort: 16443

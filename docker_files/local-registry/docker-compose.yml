@@ -16,7 +16,7 @@ services:
       # REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers: '[Docker-Content-Digest]'
       REGISTRY_STORAGE_DELETE_ENABLED: "true"
     networks:
-      - kind
+      - registry-network
 
   registry-ui:
     image: joxit/docker-registry-ui:latest
@@ -32,11 +32,15 @@ services:
     depends_on:
       - registry
     networks:
-      - kind
+      - registry-network
 
 networks:
+  registry-network:
+    name: registry-network
+    driver: bridge
   kind:
     external: true
+    name: kind
 
 volumes:
   registry-data:
