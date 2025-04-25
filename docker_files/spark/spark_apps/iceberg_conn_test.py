@@ -130,16 +130,16 @@ if __name__ == "__main__":
     --conf "spark.executor.extraJavaOptions=-Daws.region=us-east-1" \
     --conf "spark.hadoop.fs.s3a.region=us-east-1" \
     
-    spark-submit --master spark://spark-master:7077  --deploy-mode client spark_submit_test.py
-    spark-submit --master spark://spark-master:7077 --conf "spark.driver.extraJavaOptions=-Daws.region=us-east-1" --conf "spark.executor.extraJavaOptions=-Daws.region=us-east-1" --conf "spark.hadoop.fs.s3a.region=us-east-1" --deploy-mode client spark_submit_test.py 
     """
     
-    # AWS 리전 환경 변수 설정
-    # os.environ["AWS_REGION"] = "us-east-1"
-    # os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
-    
     # Create Spark session with command line arguments
-    with IcebergSparkSession(app_name="IcebergTest") as spark:
+    with IcebergSparkSession(
+        app_name="IcebergTest",
+        warehouse_path="s3a://warehouse/",
+        s3_endpoint="http://minio1:9000",
+        s3_access_key="admin",
+        s3_secret_key="admin1234",
+        region="us-east-1") as spark:
         # Test data generation
         now = datetime.now()
         data = [
@@ -162,41 +162,82 @@ if __name__ == "__main__":
         # 데이터프레임 생성
         test_df = spark.createDataFrame(data, schema)
 
+        # 데이터베이스 생성 테스트
+        try:
+            # 1. 데이터베이스가 이미 존재하는 경우 제거
+            print("기존 데이터베이스가 있으면 제거합니다...")
+            spark.sql("DROP DATABASE IF EXISTS local.test_db CASCADE")
+            
+            # 2. 데이터베이스 생성
+            print("데이터베이스 'test_db'를 생성합니다...")
+            spark.sql("CREATE DATABASE IF NOT EXISTS local.test_db")
+            print("데이터베이스가 성공적으로 생성되었습니다.")
+            
+            # 3. 데이터베이스 목록 확인
+            print("생성된 데이터베이스 목록:")
+            spark.sql("SHOW DATABASES").show()
+            
+            # 4. 현재 데이터베이스 사용
+            spark.sql("USE local.test_db")
+            print("현재 사용 중인 데이터베이스:", spark.catalog.currentDatabase())
+            
+        except Exception as e:
+            print(f"데이터베이스 생성 중 오류 발생: {str(e)}")
         # 데이터프레임 확인
         print("생성된 데이터프레임:")
         test_df.show()
         
-        # Iceberg 테이블 이름 설정
+        # Iceberg 테이블 생성 및 제거 테스트
         table_name = "local.test_db.products"
         
-        # 임시 뷰로 등록
-        test_df.createOrReplaceTempView("updates")
-
-        # MERGE INTO 구문으로 upsert 수행
         try:
-            spark.sql(f"""
-            MERGE INTO {table_name} t
-            USING updates s
-            ON t.id = s.id
-            WHEN MATCHED THEN
-            UPDATE SET 
-                t.name = s.name,
-                t.price = s.price,
-                t.created_at = s.created_at
-            WHEN NOT MATCHED THEN
-            INSERT (id, name, price, created_at)
-            VALUES (s.id, s.name, s.price, s.created_at)
-            """)
-            print("데이터 병합 완료")
-        except Exception as e:
-            print(f"데이터 병합 중 오류 발생: {e}")
-        
-        # 결과 확인
-        try:
-            print("업데이트된 테이블:")
+            # 1. 테이블이 이미 존재하는 경우 제거
+            print("기존 테이블이 있으면 제거합니다...")
+            spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+            
+            # 2. 테이블 생성
+            print(f"Iceberg 테이블 '{table_name}'을 생성합니다...")
+            test_df.writeTo(table_name).create()
+            print("테이블이 성공적으로 생성되었습니다.")
+            
+            # 3. 테이블 데이터 확인
+            print("테이블 데이터를 확인합니다:")
+            result_df = spark.table(table_name)
+            result_df.show()
+            
+            # 4. 테이블 메타데이터 확인
+            print("테이블 메타데이터를 확인합니다:")
+            spark.sql(f"DESCRIBE TABLE {table_name}").show(truncate=False)
+            
+            # 5. 테이블에 데이터 추가
+            print("테이블에 새 데이터를 추가합니다...")
+            new_data = [
+                (9, "제품I", 400, now),
+                (10, "제품J", 500, now)
+            ]
+            new_df = spark.createDataFrame(new_data, schema)
+            new_df.writeTo(table_name).append()
+            
+            # 6. 추가된 데이터 확인
+            print("추가 후 테이블 데이터:")
             spark.table(table_name).show()
+            
+            # 7. 테이블 스냅샷 히스토리 확인
+            print("테이블 스냅샷 히스토리:")
+            spark.sql(f"SELECT * FROM {table_name}.history").show(truncate=False)
+            
         except Exception as e:
-            print(f"테이블 조회 중 오류 발생: {e}")
-
-
-
+            print(f"테스트 중 오류 발생: {str(e)}")
+        finally:
+            # 8. 테이블 제거
+            print(f"테스트 완료 후 테이블 '{table_name}'을 제거합니다...")
+            spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+            print("테이블이 성공적으로 제거되었습니다.")
+            
+            # 9. 테이블이 제거되었는지 확인
+            try:
+                spark.table(table_name)
+                print("오류: 테이블이 제거되지 않았습니다!")
+            except:
+                print("확인: 테이블이 성공적으로 제거되었습니다.")
+        

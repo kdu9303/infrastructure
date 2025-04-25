@@ -30,6 +30,9 @@ ARG ICEBERG_VERSION=1.8.1
 ARG AWS_SDK_VERSION=1.12.519
 ARG HADOOP_VERSION=3.3.4
 
+# PYTHONPATH 초기화 (없을 경우를 대비)
+ENV PYTHONPATH=""
+
 # 환경변수 설정 - 기존 Spark 이미지의 환경변수를 유지하면서 필요한 것만 추가
 ENV PYTHONPATH=$SPARK_HOME/python/:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:${PYTHONPATH} \
     PYSPARK_PYTHON=/usr/bin/python3 \
@@ -74,10 +77,10 @@ RUN pip3 install --no-cache-dir -r ${SPARK_HOME}/requirements.txt && \
 # 설정 파일 및 스크립트 복사
 COPY ./conf/spark-defaults.conf ${SPARK_HOME}/conf/
 COPY ./conf/spark-defaults.conf.hive ${SPARK_HOME}/conf/spark-defaults.conf.hive
-COPY ./entrypoint.sh ${SPARK_HOME}/
+COPY ./entrypoint.sh /opt/spark/
 
 # 실행 권한 설정
-RUN chmod +x ${SPARK_HOME}/entrypoint.sh
+RUN chmod +x /opt/spark/entrypoint.sh
 
 # 스크립트 경로 확인
 RUN ls -la ${SPARK_HOME}/bin && \
@@ -86,5 +89,15 @@ RUN ls -la ${SPARK_HOME}/bin && \
 
 WORKDIR ${SPARK_HOME}/work-dir
 
-# 기존 Spark 이미지의 ENTRYPOINT를 오버라이드
+# K8s Spark Operator 스크립트 추가
+ARG SPARK_APPLICATION=iceberg_conn_test.py
+ENV SPARK_APPLICATION=${SPARK_APPLICATION}
+
+COPY ./spark_apps/${SPARK_APPLICATION} ${SPARK_HOME}/bin/
+RUN chmod +x ${SPARK_HOME}/bin/${SPARK_APPLICATION}
+
+# 기본 ENTRYPOINT 설정 - 인자에 따라 다른 작업 수행
 ENTRYPOINT ["tini", "--", "/opt/spark/entrypoint.sh"]
+
+# 기본 CMD 설정 - 인자가 없을 경우 application 모드로 실행
+CMD ["application"]

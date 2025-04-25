@@ -27,6 +27,7 @@ fi
 echo "SPARK_WORKLOAD: $SPARK_WORKLOAD"
 echo "PATH: $PATH"
 echo "SPARK_HOME: $SPARK_HOME"
+echo "SPARK_APPLICATION: $SPARK_APPLICATION"
 
 # 스크립트 경로 확인
 ls -la $SPARK_HOME/sbin/
@@ -50,6 +51,22 @@ then
   python -m ipykernel install --user --name=pyspark --display-name="PySpark"
   # Jupyter Lab 실행
   jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=spark
+elif [ "$SPARK_WORKLOAD" == "application" ] || [ -z "$SPARK_WORKLOAD" ]
+then
+  # Spark Operator 또는 단독 실행 애플리케이션 모드
+  # 애플리케이션 파일이 인자로 전달된 경우 실행
+  if [ -n "$2" ] && [ -f "$2" ]; then
+    echo "Running Spark application from file: $2"
+    exec python "$2"
+  # 기본 Spark 애플리케이션 실행 (환경변수 사용)
+  elif [ -n "$SPARK_APPLICATION" ] && [ -f "$SPARK_HOME/bin/$SPARK_APPLICATION" ]; then
+    echo "Running default Spark application: $SPARK_APPLICATION"
+    exec python "$SPARK_HOME/bin/$SPARK_APPLICATION"
+  else
+    echo "No Spark application specified, ready to execute commands"
+    # 컨테이너가 종료되지 않도록 유지
+    tail -f /dev/null
+  fi
 fi
 
 
