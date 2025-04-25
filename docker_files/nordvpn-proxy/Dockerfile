@@ -1,6 +1,7 @@
 # docker build -t 192.168.0.17:5000/network-test:0.01 .
+# docker build -t localhost:5000/network-test:0.0.1 .
 # docker build -t 127.0.0.1:5000/network-test:0.0.3 .
-# docker push 127.0.0.1:5000/network-test:0.0.3
+# docker push 127.0.0.1:5000/network-test:0.0.1
 
 FROM ubuntu:latest
 
