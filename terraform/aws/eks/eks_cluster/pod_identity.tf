@@ -2,6 +2,9 @@
 # # EKS Pod Identity를 위한 IAM 역할 및 정책 설정
 # ###############################################################################
 
+# # 현재 AWS 계정 ID를 가져오기 위한 필수 데이터 소스
+# data "aws_caller_identity" "current" {} 
+
 # # 1. 파드가 수임(Assume)할 IAM 역할 정의
 # data "aws_iam_policy_document" "pod_identity_assume_role_policy" {
 #   statement {
@@ -61,6 +64,3 @@
 #     "Description" = "EKS Pod Identity 연결 (my-app-sa)"
 #   })
 # }
-
-# # 현재 AWS 계정 ID를 가져오기 위한 필수 데이터 소스
-# data "aws_caller_identity" "current" {} 
