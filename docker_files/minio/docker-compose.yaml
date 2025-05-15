@@ -1,58 +1,23 @@
 services:
-  minio1:
+  minio:
     image: quay.io/minio/minio:latest
-    container_name: minio1
-    hostname: minio1
+    container_name: minio
+    hostname: minio
     restart: unless-stopped
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: admin1234
       MINIO_REGION: us-east-1
       MINIO_PROMETHEUS_AUTH_TYPE: public
-      MINIO_SERVER_URL: "http://minio1:9000"
+      MINIO_SERVER_URL: "http://minio:9000"
     ports:
       - "9000:9000"
       - "9001:9001"
-    command: server --address ":9000" --console-address ":9001" http://minio{1...2}/data/data{1...2}
+    command: server /data --console-address ":9001"
     volumes:
-      - minio1-data1:/data/data1
-      - minio1-data2:/data/data2
-    networks:
-      - kind
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 1G
-
-  minio2:
-    image: quay.io/minio/minio:latest
-    container_name: minio2
-    restart: unless-stopped
-    hostname: minio2
-    environment:
-      MINIO_ROOT_USER: admin
-      MINIO_ROOT_PASSWORD: admin1234
-      MINIO_REGION: us-east-1
-      MINIO_PROMETHEUS_AUTH_TYPE: public
-      MINIO_SERVER_URL: "http://minio2:9000"
-    ports:
-      - "9002:9000"
-      - "9003:9001"
-    command: server --address ":9000" --console-address ":9001" http://minio{1...2}/data/data{1...2}
-    volumes:
-      - minio2-data1:/data/data1
-      - minio2-data2:/data/data2
-    networks:
-      - kind
+      - ./minio-data:/data
+    # networks:
+    #   - kind
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -72,57 +37,22 @@ services:
     image: quay.io/minio/mc:latest
     container_name: mc
     depends_on:
-      - minio1
-      - minio2
+      - minio
     environment:
-      MC_HOST_minio1: http://admin:admin1234@minio1:9000
+      MC_HOST_minio1: http://admin:admin1234@minio:9000
+    restart: unless-stopped
     entrypoint: >
       /bin/sh -c "
-      until (mc admin info minio1) do echo 'Waiting for MinIO to be ready...' && sleep 1; done;
-      mc admin info minio1;
+      until (mc admin info minio) do echo 'Waiting for MinIO to be ready...' && sleep 1; done;
+      mc admin info minio;
       exit 0;
       "
-    networks:
-      - kind
+    # networks:
+    #   - kind
 
 networks:
-  # minio_network:
-  #   driver: bridge
-  #   name: minio_network
-  kind:
-    external: true
-
-
-
-volumes:
-  # 기존 볼륨 설정 (주석 처리)
-  # minio1-data1:
-  # minio1-data2:
-  # minio2-data1:
-  # minio2-data2:
-  
-  # 로컬 경로로 매핑된 볼륨 설정
-  minio1-data1:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:\docker_volumn\minio1\data1
-  minio1-data2:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:\docker_volumn\minio1\data2
-  minio2-data1:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:\docker_volumn\minio2\data1
-  minio2-data2:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:\docker_volumn\minio2\data2
+  minio_network:
+    driver: bridge
+    name: minio_network
+  # kind:
+    # external: true

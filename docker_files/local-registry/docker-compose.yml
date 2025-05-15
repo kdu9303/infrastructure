@@ -38,14 +38,14 @@ networks:
   registry-network:
     name: registry-network
     driver: bridge
-  kind:
-    external: true
-    name: kind
+  # kind:
+  #   external: true
+  #   name: kind
 
 volumes:
   registry-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: E:\docker_volumn\registry 
+    # driver: local
+    # driver_opts:
+    #   type: none
+    #   o: bind
+    #   device: E:\docker_volumn\registry
