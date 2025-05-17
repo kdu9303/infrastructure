@@ -1,0 +1,4 @@
+catalog:
+  default:
+    uri:  http://0.0.0.0:8181/
+    s3.endpoint: http://localhost:9000
