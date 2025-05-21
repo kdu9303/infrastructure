@@ -1,0 +1,19 @@
+services:
+
+  trino:
+    image: 'trinodb/trino:latest'
+    hostname: trino
+    env_file:
+      - .env
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=ap-northeast-2
+    volumes:
+      # iceberg catalog 설정
+      - ./iceberg.properties:/etc/trino/catalog/iceberg.properties
+      # source bucket의 parquet 파일을 읽기 위한 설정
+      - ./hive.properties:/etc/trino/catalog/hive.properties
+    ports:
+      - '8085:8080'
+
