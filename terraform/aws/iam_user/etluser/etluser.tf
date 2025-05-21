@@ -79,3 +79,40 @@ resource "aws_iam_group_policy_attachment" "etluser_group_dynamodb_full" {
   group      = aws_iam_group.etluser_group.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
 }
+
+resource "aws_iam_group_policy_attachment" "etluser_group_iam_full" {
+  group      = aws_iam_group.etluser_group.name
+  policy_arn = "arn:aws:iam::aws:policy/IAMFullAccess"
+}
+
+resource "aws_iam_group_policy" "etluser_group_passrole" {
+  name  = "AllowPassRoleForGlueCrawler"
+  group = aws_iam_group.etluser_group.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "iam:PassRole",
+        Resource = "arn:aws:iam::*:role/glue-crawler-*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_group_policy" "etluser_group_logs_filter" {
+  name  = "AllowLogsFilterLogEvents"
+  group = aws_iam_group.etluser_group.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = "logs:FilterLogEvents",
+        Resource = "arn:aws:logs:*:*:log-group:/aws-glue/*:log-stream:*"
+      }
+    ]
+  })
+}
