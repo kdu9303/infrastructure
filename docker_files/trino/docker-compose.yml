@@ -3,7 +3,7 @@ services:
   trino:
     image: 'trinodb/trino:latest'
     hostname: trino
-    # restart: unless-stopped
+    restart: unless-stopped
     env_file:
       - .env
     environment:
