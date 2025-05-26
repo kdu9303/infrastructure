@@ -116,3 +116,32 @@ resource "aws_iam_group_policy" "etluser_group_logs_filter" {
     ]
   })
 }
+
+resource "aws_iam_group_policy" "etluser_group_athena_cloudwatch" {
+  name  = "etluser-athena-cloudwatch-policy"
+  group = aws_iam_group.etluser_group.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "athena:*"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
