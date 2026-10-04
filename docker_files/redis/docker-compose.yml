@@ -1,0 +1,33 @@
+# Stable releases checked on 2026-10-04.
+# Start: docker compose -f docker_files/redis/docker-compose.yml up -d
+services:
+  redis:
+    image: redis:8.10.2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"
+    command:
+      ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - ./data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    ports:
+      - "5540:5540"
+    environment:
+      RI_REDIS_HOST: redis
+      RI_REDIS_PORT: "6379"
+      RI_REDIS_ALIAS: Local Redis
+    volumes:
+      - ./data/redisinsight:/data
+    depends_on:
+      redis:
+        condition: service_healthy

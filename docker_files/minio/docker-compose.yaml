@@ -1,6 +1,6 @@
 services:
   minio:
-    image: quay.io/minio/minio:latest
+    image: quay.io/minio/minio:${MINIO_IMAGE_TAG:-RELEASE.2025-04-22T22-12-26Z}
     container_name: minio
     hostname: minio
     restart: unless-stopped
@@ -23,15 +23,15 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
-          cpus: '1'
+          cpus: "1"
           memory: 2G
         reservations:
-          cpus: '0.5'
+          cpus: "0.5"
           memory: 1G
-
 
   # iceberg-rest:
   #     hostname: "iceberg-rest"
@@ -92,4 +92,4 @@ networks:
     driver: bridge
     name: minio_network
   # kind:
-    # external: true
+  # external: true
